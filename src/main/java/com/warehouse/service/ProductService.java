@@ -1,6 +1,7 @@
 package com.warehouse.service;
 
 import com.warehouse.common.PageResult;
+import com.warehouse.config.CacheKeyGenerator;
 import com.warehouse.entity.Category;
 import com.warehouse.entity.Product;
 import com.warehouse.entity.Supplier;
@@ -9,6 +10,8 @@ import com.warehouse.repository.ProductRepository;
 import com.warehouse.repository.SupplierRepository;
 import com.warehouse.util.ExcelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +38,7 @@ public class ProductService {
     @Autowired
     private SupplierRepository supplierRepository;
 
+    @Cacheable(value = "products", keyGenerator = "cacheKeyGenerator", unless = "#result.records.size() > 1000")
     public PageResult<Product> getProducts(String code, String name, Integer categoryId, Integer status,
                                            Integer minStockQty, Integer maxStockQty,
                                            Integer page, Integer size) {
@@ -50,6 +54,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = {"products", "lowStockProducts"}, allEntries = true)
     public Product createProduct(Product product) {
         if (productRepository.existsByCode(product.getCode())) {
             throw new RuntimeException("商品编号已存在");
@@ -66,6 +71,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = {"products", "lowStockProducts"}, allEntries = true)
     public Product updateProduct(Integer id, Product product) {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("商品不存在"));
@@ -97,6 +103,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = {"products", "lowStockProducts"}, allEntries = true)
     public void deleteProduct(Integer id) {
         if (!productRepository.existsById(id)) {
             throw new RuntimeException("商品不存在");
@@ -104,6 +111,7 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    @Cacheable(value = "lowStockProducts", unless = "#result.size() > 500")
     public List<Product> getLowStockProducts() {
         return productRepository.findLowStockProducts();
     }
@@ -135,6 +143,7 @@ public class ProductService {
      * 从Excel导入商品数据
      */
     @Transactional
+    @CacheEvict(value = {"products", "lowStockProducts"}, allEntries = true)
     public List<String> importFromExcel(MultipartFile file) throws IOException {
         List<String> errors = new ArrayList<>();
 

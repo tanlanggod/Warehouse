@@ -1,13 +1,13 @@
 spring:
   application:
     name: warehouse-management
-  
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/warehouse_management?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: root
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,14 +16,37 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
-  
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+#    password: your_password
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: 900000  # 15分钟，单位毫秒
+      cache-null-values: true  # 缓存空值，防止缓存穿透
+      key-prefix: "warehouse:cache:"
+      use-key-prefix: true
+
 server:
-  port: 8083
+  port: 8080
   servlet:
     context-path: /api
 
