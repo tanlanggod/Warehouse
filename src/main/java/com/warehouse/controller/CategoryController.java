@@ -25,41 +25,29 @@ public class CategoryController {
 
     @PostMapping
     public Result<Category> createCategory(@RequestBody Category category) {
-        try {
-            if (categoryRepository.existsByName(category.getName())) {
-                return Result.error("类别名称已存在");
-            }
-            return Result.success(categoryRepository.save(category));
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
+        if (categoryRepository.existsByName(category.getName())) {
+            throw new RuntimeException("类别名称已存在");
         }
+        return Result.success(categoryRepository.save(category));
     }
 
     @PutMapping("/{id}")
     public Result<Category> updateCategory(@PathVariable Integer id, @RequestBody Category category) {
-        try {
-            Category existing = categoryRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("类别不存在"));
-            if (!existing.getName().equals(category.getName()) &&
-                categoryRepository.existsByName(category.getName())) {
-                return Result.error("类别名称已存在");
-            }
-            existing.setName(category.getName());
-            existing.setDescription(category.getDescription());
-            return Result.success(categoryRepository.save(existing));
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
+        Category existing = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("类别不存在"));
+        if (!existing.getName().equals(category.getName()) &&
+            categoryRepository.existsByName(category.getName())) {
+            throw new RuntimeException("类别名称已存在");
         }
+        existing.setName(category.getName());
+        existing.setDescription(category.getDescription());
+        return Result.success(categoryRepository.save(existing));
     }
 
     @DeleteMapping("/{id}")
     public Result<Void> deleteCategory(@PathVariable Integer id) {
-        try {
-            categoryRepository.deleteById(id);
-            return Result.success(null);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        categoryRepository.deleteById(id);
+        return Result.success(null);
     }
 }
 

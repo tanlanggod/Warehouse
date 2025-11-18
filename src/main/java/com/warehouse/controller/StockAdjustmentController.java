@@ -22,22 +22,14 @@ public class StockAdjustmentController {
             @RequestParam(required = false) Integer productId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        try {
-            PageResult<StockAdjustment> result = stockAdjustmentService.getAdjustments(productId, page, size);
-            return Result.success(result);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        PageResult<StockAdjustment> result = stockAdjustmentService.getAdjustments(productId, page, size);
+        return Result.success(result);
     }
 
     @PostMapping
     public Result<StockAdjustment> createAdjustment(@RequestBody StockAdjustment adjustment) {
-        try {
-            StockAdjustment created = stockAdjustmentService.createAdjustment(adjustment);
-            return Result.success(created);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        StockAdjustment created = stockAdjustmentService.createAdjustment(adjustment);
+        return Result.success(created);
     }
 }
 

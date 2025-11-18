@@ -21,13 +21,19 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     Page<Product> findByNameContaining(String name, Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE " +
+           "(:code IS NULL OR p.code LIKE %:code%) AND " +
            "(:name IS NULL OR p.name LIKE %:name%) AND " +
            "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
-           "(:status IS NULL OR p.status = :status)")
-    Page<Product> findByConditions(@Param("name") String name,
-                                    @Param("categoryId") Integer categoryId,
-                                    @Param("status") Integer status,
-                                    Pageable pageable);
+           "(:status IS NULL OR p.status = :status) AND " +
+           "(:minStockQty IS NULL OR p.stockQty >= :minStockQty) AND " +
+           "(:maxStockQty IS NULL OR p.stockQty <= :maxStockQty)")
+    Page<Product> findByConditions(@Param("code") String code,
+                                   @Param("name") String name,
+                                   @Param("categoryId") Integer categoryId,
+                                   @Param("status") Integer status,
+                                   @Param("minStockQty") Integer minStockQty,
+                                   @Param("maxStockQty") Integer maxStockQty,
+                                   Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE p.stockQty <= p.minStock AND p.status = 1")
     List<Product> findLowStockProducts();

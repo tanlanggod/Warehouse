@@ -5,6 +5,7 @@ import com.warehouse.entity.Inbound;
 import com.warehouse.entity.Product;
 import com.warehouse.repository.InboundRepository;
 import com.warehouse.repository.ProductRepository;
+import com.warehouse.util.ExcelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,9 +13,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * 入库业务服务，负责入库单操作及库存同步。
@@ -84,6 +88,31 @@ public class InboundService {
         }
 
         inboundRepository.deleteById(id);
+    }
+
+    /**
+     * 导出入库记录到Excel
+     */
+    public byte[] exportToExcel(LocalDateTime startDate, LocalDateTime endDate) throws IOException {
+        List<Inbound> inbounds;
+        if (startDate != null && endDate != null) {
+            inbounds = inboundRepository.findByInboundDateBetween(startDate, endDate);
+        } else {
+            inbounds = inboundRepository.findAll();
+        }
+
+        String[] headers = {"入库单号", "商品编号", "商品名称", "入库数量", "供应商", "入库日期", "操作员", "备注"};
+
+        return ExcelUtil.exportExcel(inbounds, headers,
+                Inbound::getInboundNo,
+                i -> i.getProduct() != null ? i.getProduct().getCode() : "",
+                i -> i.getProduct() != null ? i.getProduct().getName() : "",
+                Inbound::getQuantity,
+                i -> i.getSupplier() != null ? i.getSupplier().getName() : "",
+                Inbound::getInboundDate,
+                i -> i.getOperator() != null ? i.getOperator().getUsername() : "",
+                i -> i.getRemark() != null ? i.getRemark() : ""
+        );
     }
 }
 

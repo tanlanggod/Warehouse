@@ -24,5 +24,7 @@ public interface InboundRepository extends JpaRepository<Inbound, Integer> {
                                     @Param("productId") Integer productId,
                                     @Param("supplierId") Integer supplierId,
                                     Pageable pageable);
+
+    java.util.List<Inbound> findByInboundDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 }
 

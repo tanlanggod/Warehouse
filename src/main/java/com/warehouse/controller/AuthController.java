@@ -20,12 +20,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public Result<LoginResponse> login(@Validated @RequestBody LoginRequest request) {
-        try {
-            LoginResponse response = authService.login(request);
-            return Result.success(response);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        LoginResponse response = authService.login(request);
+        return Result.success(response);
     }
 }
 

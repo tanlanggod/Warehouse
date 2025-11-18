@@ -6,6 +6,9 @@ import com.warehouse.entity.Outbound;
 import com.warehouse.service.OutboundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -28,42 +31,46 @@ public class OutboundController {
             @RequestParam(required = false) Integer customerId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        try {
-            PageResult<Outbound> result = outboundService.getOutbounds(
-                    startDate, endDate, productId, customerId, page, size);
-            return Result.success(result);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        PageResult<Outbound> result = outboundService.getOutbounds(
+                startDate, endDate, productId, customerId, page, size);
+        return Result.success(result);
     }
 
     @GetMapping("/{id}")
     public Result<Outbound> getOutboundById(@PathVariable Integer id) {
-        try {
-            Outbound outbound = outboundService.getOutboundById(id);
-            return Result.success(outbound);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        Outbound outbound = outboundService.getOutboundById(id);
+        return Result.success(outbound);
     }
 
     @PostMapping
     public Result<Outbound> createOutbound(@RequestBody Outbound outbound) {
-        try {
-            Outbound created = outboundService.createOutbound(outbound);
-            return Result.success(created);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        Outbound created = outboundService.createOutbound(outbound);
+        return Result.success(created);
     }
 
     @DeleteMapping("/{id}")
     public Result<Void> deleteOutbound(@PathVariable Integer id) {
+        outboundService.deleteOutbound(id);
+        return Result.success(null);
+    }
+
+    /**
+     * 导出出库记录到Excel
+     */
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportToExcel(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate) {
         try {
-            outboundService.deleteOutbound(id);
-            return Result.success(null);
+            byte[] data = outboundService.exportToExcel(startDate, endDate);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", "outbounds.xlsx");
+
+            return ResponseEntity.ok().headers(headers).body(data);
         } catch (Exception e) {
-            return Result.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

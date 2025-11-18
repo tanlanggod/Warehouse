@@ -6,6 +6,9 @@ import com.warehouse.entity.Inbound;
 import com.warehouse.service.InboundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -28,42 +31,46 @@ public class InboundController {
             @RequestParam(required = false) Integer supplierId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        try {
-            PageResult<Inbound> result = inboundService.getInbounds(
-                    startDate, endDate, productId, supplierId, page, size);
-            return Result.success(result);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        PageResult<Inbound> result = inboundService.getInbounds(
+                startDate, endDate, productId, supplierId, page, size);
+        return Result.success(result);
     }
 
     @GetMapping("/{id}")
     public Result<Inbound> getInboundById(@PathVariable Integer id) {
-        try {
-            Inbound inbound = inboundService.getInboundById(id);
-            return Result.success(inbound);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        Inbound inbound = inboundService.getInboundById(id);
+        return Result.success(inbound);
     }
 
     @PostMapping
     public Result<Inbound> createInbound(@RequestBody Inbound inbound) {
-        try {
-            Inbound created = inboundService.createInbound(inbound);
-            return Result.success(created);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        Inbound created = inboundService.createInbound(inbound);
+        return Result.success(created);
     }
 
     @DeleteMapping("/{id}")
     public Result<Void> deleteInbound(@PathVariable Integer id) {
+        inboundService.deleteInbound(id);
+        return Result.success(null);
+    }
+
+    /**
+     * 导出入库记录到Excel
+     */
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportToExcel(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate) {
         try {
-            inboundService.deleteInbound(id);
-            return Result.success(null);
+            byte[] data = inboundService.exportToExcel(startDate, endDate);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", "inbounds.xlsx");
+
+            return ResponseEntity.ok().headers(headers).body(data);
         } catch (Exception e) {
-            return Result.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

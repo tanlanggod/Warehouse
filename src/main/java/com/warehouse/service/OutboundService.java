@@ -5,6 +5,7 @@ import com.warehouse.entity.Outbound;
 import com.warehouse.entity.Product;
 import com.warehouse.repository.OutboundRepository;
 import com.warehouse.repository.ProductRepository;
+import com.warehouse.util.ExcelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,9 +13,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * 出库业务服务，负责出库单管理与库存扣减。
@@ -73,6 +77,31 @@ public class OutboundService {
         productRepository.save(product);
 
         outboundRepository.deleteById(id);
+    }
+
+    /**
+     * 导出出库记录到Excel
+     */
+    public byte[] exportToExcel(LocalDateTime startDate, LocalDateTime endDate) throws IOException {
+        List<Outbound> outbounds;
+        if (startDate != null && endDate != null) {
+            outbounds = outboundRepository.findByOutboundDateBetween(startDate, endDate);
+        } else {
+            outbounds = outboundRepository.findAll();
+        }
+
+        String[] headers = {"出库单号", "商品编号", "商品名称", "出库数量", "客户", "出库日期", "操作员", "备注"};
+
+        return ExcelUtil.exportExcel(outbounds, headers,
+                Outbound::getOutboundNo,
+                o -> o.getProduct() != null ? o.getProduct().getCode() : "",
+                o -> o.getProduct() != null ? o.getProduct().getName() : "",
+                Outbound::getQuantity,
+                o -> o.getCustomer() != null ? o.getCustomer().getName() : "",
+                Outbound::getOutboundDate,
+                o -> o.getOperator() != null ? o.getOperator().getUsername() : "",
+                o -> o.getRemark() != null ? o.getRemark() : ""
+        );
     }
 }
 

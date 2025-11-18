@@ -25,38 +25,26 @@ public class SupplierController {
 
     @PostMapping
     public Result<Supplier> createSupplier(@RequestBody Supplier supplier) {
-        try {
-            return Result.success(supplierRepository.save(supplier));
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        return Result.success(supplierRepository.save(supplier));
     }
 
     @PutMapping("/{id}")
     public Result<Supplier> updateSupplier(@PathVariable Integer id, @RequestBody Supplier supplier) {
-        try {
-            Supplier existing = supplierRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("供应商不存在"));
-            existing.setName(supplier.getName());
-            existing.setContactPerson(supplier.getContactPerson());
-            existing.setPhone(supplier.getPhone());
-            existing.setAddress(supplier.getAddress());
-            existing.setEmail(supplier.getEmail());
-            existing.setStatus(supplier.getStatus());
-            return Result.success(supplierRepository.save(existing));
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        Supplier existing = supplierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("供应商不存在"));
+        existing.setName(supplier.getName());
+        existing.setContactPerson(supplier.getContactPerson());
+        existing.setPhone(supplier.getPhone());
+        existing.setAddress(supplier.getAddress());
+        existing.setEmail(supplier.getEmail());
+        existing.setStatus(supplier.getStatus());
+        return Result.success(supplierRepository.save(existing));
     }
 
     @DeleteMapping("/{id}")
     public Result<Void> deleteSupplier(@PathVariable Integer id) {
-        try {
-            supplierRepository.deleteById(id);
-            return Result.success(null);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        supplierRepository.deleteById(id);
+        return Result.success(null);
     }
 }
 
